@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>專業英文複習字卡系統 (終極擴充版)</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --mode-color: #e67e22;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        /* Flashcard Styles */
+        .flashcard-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            box-sizing: border-box;
+        }
+
+        .card-info {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 140px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+            padding: 15px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .card-front {
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+        }
+
+        .card-front .main-text {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .card-front .sub-text {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        .card-back {
+            background-color: var(--success-color);
+            color: white;
+            display: none;
+        }
+
+        .card-back .ans-text {
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        .flashcard.flipped .card-front {
+            display: none;
+        }
+        
+        .flashcard.flipped .card-back {
+            display: flex;
+        }
+
+        .card-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--secondary-color);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .control-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* Text Review Styles */
+        .text-review-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+
+        .toolbar {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .sentence-pair {
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sentence-pair:last-child {
+            border-bottom: none;
+        }
+
+        .en-text {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: 500;
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .zh-text {
+            font-size: 15px;
+            color: #7f8c8d;
+            line-height: 1.5;
+        }
+
+        .show-click {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .show-click.hide-active {
+            background-color: #ffeaa7;
+            color: #ffeaa7;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📚 專業英文單字與課文高效複習系統</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('all')">全部內容</button>
+        <button class="tab-btn" onclick="switchTab('u7')">Unit 07 知識管理</button>
+        <button class="tab-btn" onclick="switchTab('u9')">Unit 09 著作權</button>
+        <button class="tab-btn" onclick="switchTab('u10')">Unit 10 美國專利</button>
+    </div>
+
+    <!-- 單字卡區塊 -->
+    <div class="flashcard-wrapper">
+        <div class="card-info" id="cardIndex">字卡載入中...</div>
+        <div class="flashcard" id="card" onclick="flipCard()">
+            <div class="card-inner">
+                <div class="card-front">
+                    <div class="main-text" id="cardFrontMain">Word</div>
+                    <div class="sub-text" id="cardFrontSub">[phonetic]</div>
+                </div>
+                <div class="card-back">
+                    <div class="ans-text" id="cardBackAns">中文解釋</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-controls">
+            <button class="control-btn" style="background-color: var(--mode-color);" id="modeBtn" onclick="toggleCardMode()">模式：英翻中</button>
+            <button class="control-btn" onclick="prevCard()">上一個</button>
+            <button class="control-btn" onclick="randomCard()">隨機抽卡</button>
+            <button class="control-btn" onclick="nextCard()">下一個</button>
+        </div>
+    </div>
+
+    <!-- 課文對照複習區塊 -->
+    <div class="text-review-panel">
+        <h3>📖 核心課文背誦與自我檢測（點擊黃色遮罩可單獨顯現）</h3>
+        <div class="toolbar">
+            <button class="control-btn" style="background-color:#e67e22;" onclick="toggleMask('en')">切換隱藏英文</button>
+            <button class="control-btn" style="background-color:#e67e22;" onclick="toggleMask('zh')">切換隱藏中文</button>
+        </div>
+        
+        <div id="textContainer">
+            <!-- 由 JavaScript 動態寫入課文 -->
+        </div>
+    </div>
+
+    <script>
+        // 資料庫：單字庫 (已完全擴充)
+        const vocabData = [
+            // ===== UNIT 07 =====
+            { word: "signify", phonetic: "['sɪgnə,faɪ]", meaning: "象徵、預示 (v)", unit: "u7" },
+            { word: "strategically", phonetic: "[strə'tidʒɪklɪ]", meaning: "策略性地 (adv)", unit: "u7" },
+            { word: "competence", phonetic: "['kɑmpətəns]", meaning: "資格、能力、財產 (n)", unit: "u7" },
+            { word: "asset", phonetic: "['æset]", meaning: "資產 (n)", unit: "u7" },
+            { word: "expertise", phonetic: "[,ekspə'tiz]", meaning: "專業技術、專家鑑定 (n)", unit: "u7" },
+            { word: "revalidate", phonetic: "[ri'vælə,det]", meaning: "再確認 (v)", unit: "u7" },
+            { word: "tacit", phonetic: "['tæsɪt]", meaning: "無言的、緘默的 (adj)", unit: "u7" },
+            { word: "explicit", phonetic: "[ɪk'splɪsɪt]", meaning: "明確的、外顯的 (adj)", unit: "u7" },
+            { word: "accessible", phonetic: "[æk'sesəbl]", meaning: "可取得的、易接近的 (adj)", unit: "u7" },
+            { word: "infra-structure", phonetic: "['ɪnfrə-strʌktʃɚ]", meaning: "基礎建設 (n)", unit: "u7" },
+            { word: "digital economy", phonetic: "[ˈdɪdʒɪtl ɪˈkɑːnəmɪ]", meaning: "數位經濟", unit: "u7" },
+            { word: "knowledge economy", phonetic: "[ˈnɑːlɪdʒ ɪˈkɑːnəmɪ]", meaning: "知識經濟", unit: "u7" },
+            { word: "gig economy", phonetic: "[ɡɪɡ ɪˈkɑːnəmɪ]", meaning: "零工經濟", unit: "u7" },
+            { word: "traditional economy", phonetic: "[trəˈdɪʃənl ɪˈkɑːnəmɪ]", meaning: "傳統經濟", unit: "u7" },
+            { word: "tacit knowledge", phonetic: "[ˈtæsɪt ˈnɑːlɪdʒ]", meaning: "內隱知識 / 隱性知識", unit: "u7" },
+            { word: "explicit knowledge", phonetic: "[ɪkˈsplɪsɪt ˈnɑːlɪdʒ]", meaning: "外顯知識 / 顯性知識", unit: "u7" },
+            { word: "know-how", phonetic: "[ˈnoʊˌhaʊ]", meaning: "實務經驗、技術訣竅 (n)", unit: "u7" },
+            { word: "skill", phonetic: "[skɪl]", meaning: "技能、技巧 (n)", unit: "u7" },
+            { word: "technology", phonetic: "[tekˈnɑːlədʒɪ]", meaning: "科技、技術 (n)", unit: "u7" },
+            { word: "sector", phonetic: "[ˈsektər]", meaning: "部門、界 (n)", unit: "u7" },
+            { word: "industry", phonetic: "[ˈɪndəstrɪ]", meaning: "產業、工業 (n)", unit: "u7" },
+            { word: "manufacturing sector", phonetic: "製造業部門", meaning: "製造業部門", unit: "u7" },
+            { word: "business sector", phonetic: "商業部門", meaning: "商業部門、工商界", unit: "u7" },
+            { word: "service sector", phonetic: "服務業部門", meaning: "服務業部門", unit: "u7" },
+            { word: "private sector", phonetic: "私營部門", meaning: "私人企業、民間部門", unit: "u7" },
+            { word: "public sector", phonetic: "公共部門", meaning: "政府部門、公共部門", unit: "u7" },
+            { word: "knowledge asset", phonetic: "知識資產", meaning: "知識資產", unit: "u7" },
+            { word: "intellectual asset", phonetic: "智慧資產", meaning: "智慧資產", unit: "u7" },
+            { word: "intellectual property", phonetic: "智慧財產", meaning: "智慧財產 (IP)", unit: "u7" },
+            { word: "intellectual property right (IPR)", phonetic: "智慧財產權", meaning: "智慧財產權 (IPR)", unit: "u7" },
+            { word: "blanket", phonetic: "['blæŋkɪt]", meaning: "總括的、一刀切的 (adj); 毛毯 (n)", unit: "u7" },
+            { word: "carpet", phonetic: "[ˈkɑːrpɪt]", meaning: "大地毯 (通常鋪滿整個房間) (n)", unit: "u7" },
+            { word: "rug", phonetic: "[rʌɡ]", meaning: "小地毯、墊子 (鋪局部) (n)", unit: "u7" },
+            { word: "tapestry", phonetic: "[ˈtæpɪstrɪ]", meaning: "織錦畫、掛毯 (n)", unit: "u7" },
+            { word: "advantage and disadvantage", phonetic: "利與弊", meaning: "優點與缺點、好處與壞處", unit: "u7" },
+            { word: "pros and cons", phonetic: "[proʊz ən kɑːnz]", meaning: "利與弊、贊成與反對", unit: "u7" },
+            { word: "strength and weakness", phonetic: "強項與弱點", meaning: "優勢與劣勢、長處與短處", unit: "u7" },
+            { word: "SECI model", phonetic: "[SECI 模型]", meaning: "知識創造轉換模型(Socialization, Externalization, Combination, Internalization)", unit: "u7" },
+
+            // ===== UNIT 09 =====
+            { word: "copyright", phonetic: "['kɑpɪ,raɪt]", meaning: "著作權、版權 (n)", unit: "u9" },
+            { word: "knowledge asset", phonetic: "知識資產", meaning: "知識資產", unit: "u9" },
+            { word: "intellectual asset", phonetic: "智慧資產", meaning: "智慧資產", unit: "u9" },
+            { word: "intellectual property", phonetic: "智慧財產", meaning: "智慧財產 (IP)", unit: "u9" },
+            { word: "intellectual property right (IPR)", phonetic: "智慧財產權", meaning: "智慧財產權 (IPR)", unit: "u9" },
+            { word: "authorship", phonetic: "['ɔθɚ,ʃɪp]", meaning: "著作具名、作者身分 (n)", unit: "u9" },
+            { word: "author", phonetic: "[ˈɔːθər]", meaning: "作者、創作人 (n)", unit: "u9" },
+            { word: "literary", phonetic: "['lɪtə,rɛrɪ]", meaning: "文藝的、文學的 (adj)", unit: "u9" },
+            { word: "unpublished", phonetic: "[ʌn'pʌblɪʃt]", meaning: "未出版的 (adj)", unit: "u9" },
+            { word: "act", phonetic: "[ækt]", meaning: "法案 (n)", unit: "u9" },
+            { word: "phonorecord", phonetic: "['fona,rəkɚd]", meaning: "聲音記錄、唱片 (n)", unit: "u9" },
+            { word: "publisher", phonetic: "['pʌblɪʃɚ]", meaning: "出版商 (n)", unit: "u9" },
+            { word: "caption", phonetic: "['kæpʃən]", meaning: "標題、圖表說明文字 (n)", unit: "u9" },
+            { word: "passage", phonetic: "['pæsɪdʒ]", meaning: "段落 (n)", unit: "u9" },
+            { word: "quote", phonetic: "[kwot]", meaning: "引用 (n)(v)", unit: "u9" },
+            { word: "periodical", phonetic: "[,pɪrɪ'ɑdɪkl]", meaning: "期刊、定期刊物 (n)", unit: "u9" },
+            { word: "source lines", phonetic: "來源標示", meaning: "資料來源標示 / 致謝行", unit: "u9" },
+            { word: "sponsorship", phonetic: "['spɑnsɚ,ʃɪp]", meaning: "贊助 (n)", unit: "u9" },
+            { word: "government", phonetic: "[ˈɡʌvərnmənt]", meaning: "政府 (n)", unit: "u9" },
+            { word: "regulator", phonetic: "[ˈreɡjʊleɪtər]", meaning: "監管機構、管理者 (n)", unit: "u9" },
+            { word: "ruler", phonetic: "[ˈruːlər]", meaning: "統治者、管理者、直尺 (n)", unit: "u9" },
+            { word: "work", phonetic: "[wɜːrk]", meaning: "作品、工作 (n)", unit: "u9" },
+            { word: "original work", phonetic: "原創作品", meaning: "原創作品", unit: "u9" },
+            { word: "intellectual work", phonetic: "智慧作品", meaning: "智慧作品、特定知識作品", unit: "u9" },
+            { word: "derivative work", phonetic: "衍生作品", meaning: "衍生作品 (如翻譯、改編、續集)", unit: "u9" },
+            { word: "masterwork", phonetic: "[ˈmæstərwɜːrk]", meaning: "傑作、代表作 (n)", unit: "u9" },
+            { word: "masterpiece", phonetic: "[ˈmæstərpiːs]", meaning: "名著、傑作 (n)", unit: "u9" },
+            { word: "art", phonetic: "[ɑːrt]", meaning: "藝術 (n)", unit: "u9" },
+            { word: "book", phonetic: "[bʊk]", meaning: "書籍 (n)", unit: "u9" },
+            { word: "chart", phonetic: "[tʃɑːrt]", meaning: "圖表、航海圖 (n)", unit: "u9" },
+            { word: "datum, data", phonetic: "[ˈdeɪtəm, ˈdætə]", meaning: "資料、數據 (單數, 複數)", unit: "u9" },
+            { word: "diagram", phonetic: "[ˈdaɪəɡræm]", meaning: "示意圖、圖解 (n)", unit: "u9" },
+            { word: "drama", phonetic: "[ˈdrɑːmə]", meaning: "戲劇、劇本 (n)", unit: "u9" },
+            { word: "figure", phonetic: "[ˈfɪɡjər]", meaning: "附圖、人物、數字 (n)", unit: "u9" },
+            { word: "graph", phonetic: "[ɡræf]", meaning: "(曲線)圖表、圖表 (n)", unit: "u9" },
+            { word: "illustration", phonetic: "[ˌɪləˈstreɪʃn]", meaning: "插圖、圖解 (n)", unit: "u9" },
+            { word: "journal", phonetic: "[ˈdʒɜːrnl]", meaning: "期刊、日誌 (n)", unit: "u9" },
+            { word: "literature", phonetic: "[ˈlɪtrətʃər]", meaning: "文學、文獻 (n)", unit: "u9" },
+            { word: "magazine", phonetic: "[ˈmæɡəziːn]", meaning: "雜誌 (n)", unit: "u9" },
+            { word: "music", phonetic: "[ˈmjuːzɪk]", meaning: "音樂 (n)", unit: "u9" },
+            { word: "news", phonetic: "[nuːz]", meaning: "新聞 (n)", unit: "u9" },
+            { word: "play", phonetic: "[pleɪ]", meaning: "劇本、戲劇 (n); 玩耍 (v)", unit: "u9" },
+            { word: "poem", phonetic: "[ˈpoʊəm]", meaning: "詩、詩歌 (n)", unit: "u9" },
+            { word: "publication", phonetic: "[ˌpʌblɪˈkeɪʃn]", meaning: "出版物、發表 (n)", unit: "u9" },
+            { word: "song", phonetic: "[sɔːŋ]", meaning: "歌曲 (n)", unit: "u9" },
+            { word: "table", phonetic: "[ˈteɪbl]", meaning: "表格 (n); 桌子 (n)", unit: "u9" },
+            { word: "law", phonetic: "[lɔː]", meaning: "法律 (n)", unit: "u9" },
+            { word: "regulation", phonetic: "[ˌreɡjʊˈleɪʃn]", meaning: "法規、條例、管制 (n)", unit: "u9" },
+            { word: "rule", phonetic: "[ruːl]", meaning: "規則、規定 (n)", unit: "u9" },
+            { word: "the Congress", phonetic: "[ˈkɑːnɡrəs]", meaning: "國會 (美) (n)", unit: "u9" },
+            { word: "parliament", phonetic: "[ˈpɑːrləmənt]", meaning: "議會、國會 (英系) (n)", unit: "u9" },
+            { word: "Legislative Yuan", phonetic: "立法院", meaning: "立法院 (台)", unit: "u9" },
+            { word: "material", phonetic: "[məˈtɪrɪəl]", meaning: "材料、資料、物質 (n)", unit: "u9" },
+            { word: "script", phonetic: "[skrɪpt]", meaning: "腳本、劇本 (n)", unit: "u9" },
+            { word: "manuscript", phonetic: "[ˈmænjʊskrɪpt]", meaning: "手稿、原稿 (n)", unit: "u9" },
+            { word: "lyric", phonetic: "[ˈlɪrɪk]", meaning: "歌詞 (n); 抒情詩 (adj)", unit: "u9" },
+            { word: "heading, legend", phonetic: "[ˈhedɪŋ, ˈledʒənd]", meaning: "標題、圖例", unit: "u9" },
+            { word: "public domain", phonetic: "公共領域", meaning: "公共領域 (不受著作權保護)", unit: "u9" },
+            { word: "private domain", phonetic: "私有領域", meaning: "私有領域", unit: "u9" },
+            { word: "sponsor", phonetic: "[ˈspɑːnsər]", meaning: "贊助者、主辦者 (n); 贊助 (v)", unit: "u9" },
+
+            // ===== UNIT 10 =====
+            { word: "patent", phonetic: "['pætnt]", meaning: "專利、專利權 (n)", unit: "u10" },
+            { word: "patent pending", phonetic: "專利申請中", meaning: "專利申請中", unit: "u10" },
+            { word: "Intellectual Property Right (IPR)", phonetic: "智慧財產權", meaning: "智慧財產權 (IPR)", unit: "u10" },
+            { word: "territories", phonetic: "['tɛrə,torɪz]", meaning: "領土、國土、管轄範圍 (n)", unit: "u10" },
+            { word: "possession", phonetic: "[pə'zɛʃən]", meaning: "領地、屬地、佔領地 (n)", unit: "u10" },
+            { word: "enforce", phonetic: "[ɪn'fɔrs]", meaning: "執行、強制實施 (v)", unit: "u10" },
+            { word: "provisional", phonetic: "[prə'vɪʒənl]", meaning: "臨時的、暫時的 (adj)", unit: "u10" },
+            { word: "thereof", phonetic: "[ðɛr'ʌv]", meaning: "關於...的、它的 (adv)", unit: "u10" },
+            { word: "ornamental", phonetic: "[,ɔrnə'mɛntl]", meaning: "裝飾的、美觀的 (adj)", unit: "u10" },
+            { word: "invention", phonetic: "[ɪn'vɛnʃən]", meaning: "發明 (n)", unit: "u10" },
+            { word: "legal", phonetic: "['ligl]", meaning: "法律的 (adj)", unit: "u10" },
+            { word: "asexually", phonetic: "[e'sɛkʃʊəlɪ]", meaning: "無性地 (adv)", unit: "u10" },
+            { word: "oath", phonetic: "[oθ]", meaning: "宣誓 (n)", unit: "u10" },
+            { word: "declaration", phonetic: "[,dɛklə'reʃən]", meaning: "宣告、申報 (n)", unit: "u10" },
+            { word: "pendency", phonetic: "['pɛndənsɪ]", meaning: "未定、懸置期 (n)", unit: "u10" },
+            { word: "charge", phonetic: "[tʃɑːrdʒ]", meaning: "費用、指控 (n); 收費 (v)", unit: "u10" },
+            { word: "fare", phonetic: "[fer]", meaning: "(交通工具的) 票價 (n)", unit: "u10" },
+            { word: "fee", phonetic: "[fiː]", meaning: "規費、服務費、維護費 (n)", unit: "u10" },
+            { word: "price", phonetic: "[praɪs]", meaning: "價格、代價 (n)", unit: "u10" },
+            { word: "rate", phonetic: "[reɪt]", meaning: "費率、比率、速度 (n)", unit: "u10" },
+            { word: "toll", phonetic: "[toʊl]", meaning: "(道路、橋樑) 通行費、過路費 (n)", unit: "u10" },
+            { word: "tuition", phonetic: "[tuˈɪʃn]", meaning: "學費 (n)", unit: "u10" },
+            { word: "agent", phonetic: "[ˈeɪdʒənt]", meaning: "代理人、代理商 (n)", unit: "u10" },
+            { word: "plant", phonetic: "[plænt]", meaning: "植物專利/植物 (n); 工廠 (n)", unit: "u10" },
+            { word: "article", phonetic: "[ˈɑːrtɪkl]", meaning: "物品、物件、文章 (n)", unit: "u10" },
+            { word: "ornament", phonetic: "[ˈɔːrnəmənt]", meaning: "裝飾、裝飾物 (n)", unit: "u10" },
+            { word: "character", phonetic: "[ˈkærəktər]", meaning: "特徵、角色、性格 (n)", unit: "u10" },
+            { word: "characteristic", phonetic: "[ˌkærəktəˈrɪstɪk]", meaning: "特點、特性 (n)", unit: "u10" },
+            { word: "file", phonetic: "[faɪl]", meaning: "申請、存檔 (v); 檔案 (n)", unit: "u10" },
+            { word: "attorney", phonetic: "[əˈtɜːrnɪ]", meaning: "專利代理人、律師 (n)", unit: "u10" },
+            { word: "lawyer", phonetic: "[ˈlɔːjər]", meaning: "律師 (n)", unit: "u10" }
+        ];
+
+        // 資料庫：課文對照
+        const textData = [
+            {
+                en: "The emergence of the knowledge economy signifies that organizations' know-how is becoming more important than the sources of traditional economy.",
+                zh: "知識經濟的興起，預示著企業的「專門技術 (Know-how)」正變得比傳統經濟的資源還要重要。[cite: 1]",
+                unit: "u7"
+            },
+            {
+                en: "Moreover, knowledge is now regarded as the most strategically important resource and learning the most strategically important competence for business sectors. Thus, knowledge assets must be managed carefully, systematically and with expertise to guarantee company survival.",
+                zh: "此外，知識現在被視為最具有策略性地重要資源，而學習最具有策略性地重要的能力，則是商業領域的當務之急。因此，知識資產必須被謹慎、系統化地管理，並配合專業技術以確保公司的生存。[cite: 1]",
+                unit: "u7"
+            },
+            {
+                en: "There are two types of knowledge: tacit knowledge and explicit knowledge. Tacit knowledge is highly personal, developed from experience, and hard to document. It is, therefore, difficult to communicate and share.",
+                zh: "知識有兩種類型：內隱知識與外顯知識。內隱知識是非常個人化的、從經驗中發展而來的，且難以記錄。因此，它很難被溝通和分享。[cite: 1]",
+                unit: "u7"
+            },
+            {
+                en: "Explicit knowledge, on the other hand, is formal and systematic. Most of explicit knowledge may be documented. All the knowledge published in books, manuals or on a web-site is explicit knowledge.",
+                zh: "相反地，外顯知識是正式且系統化的。大部分的外顯知識可以被記錄下來。所有出版在書籍、手冊或網站上的知識都是外顯知識。[cite: 1]",
+                unit: "u7"
+            },
+            {
+                en: "Copyright is a form of protection provided to the author of original works of authorship including literary, dramatic, musical, artistic, and certain intellectual works, both published and unpublished.",
+                zh: "著作權是提供給原創作品作者的一種保護形式，這些作品的著作具名包括文藝的、戲劇的、音樂的、藝術的，以及某些特定的未出版作品，不論是已出版或未出版皆同。[cite: 1]",
+                unit: "u9"
+            },
+            {
+                en: "The copyright protects the form of expression rather than the subject matter of the writing.",
+                zh: "著作權保護的是表達的形式，而不是寫作的主題本身。[cite: 1]",
+                unit: "u9"
+            },
+            {
+                en: "A patent is a type of intellectual property right. It gives the patent holder the right, for a limited time, to exclude others from making, using, offering to sell, selling, or importing into the United States the subject matter that is within the scope of protection granted by the patent.",
+                zh: "專利是一種智慧財產權。它賦予專利持有人在有限的時間內，將他人排除在於美國境內製造、使用、提供銷售、銷售或進口該專利保護的主題之外的權利。[cite: 1]",
+                unit: "u10"
+            },
+            {
+                en: "A utility patent protects the way an article is used and works while a design patent protects the way an article looks.",
+                zh: "發明專利保護物品的使用和運作方式，而設計專利則保護物品的外觀。[cite: 1]",
+                unit: "u10"
+            }
+        ];
+
+        let currentFilteredVocab = [...vocabData];
+        let currentCardIndex = 0;
+        let isEnToZhMode = true; 
+
+        function init() {
+            renderCards();
+            renderTexts();
+        }
+
+        function toggleCardMode() {
+            isEnToZhMode = !isEnToZhMode;
+            const btn = document.getElementById('modeBtn');
+            btn.innerText = isEnToZhMode ? "模式：英翻中" : "模式：中翻英";
+            renderCards();
+        }
+
+        function switchTab(unit) {
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (unit === 'all') {
+                currentFilteredVocab = [...vocabData];
+            } else {
+                currentFilteredVocab = vocabData.filter(item => item.unit === unit);
+            }
+            currentCardIndex = 0;
+            renderCards();
+            renderTexts(unit);
+        }
+
+        function renderCards() {
+            const card = document.getElementById('card');
+            card.classList.remove('flipped');
+            
+            if (currentFilteredVocab.length === 0) {
+                document.getElementById('cardFrontMain').innerText = "無資料";
+                document.getElementById('cardFrontSub').innerText = "";
+                document.getElementById('cardBackAns').innerText = "本單元暫無字卡";
+                document.getElementById('cardIndex').innerText = "0 / 0";
+                return;
+            }
+
+            const item = currentFilteredVocab[currentCardIndex];
+            
+            if (isEnToZhMode) {
+                document.getElementById('cardFrontMain').innerText = item.word;
+                document.getElementById('cardFrontSub').innerText = item.phonetic;
+                document.getElementById('cardBackAns').innerText = item.meaning;
+            } else {
+                document.getElementById('cardFrontMain').innerText = item.meaning;
+                document.getElementById('cardFrontSub').innerText = "請回想英文單字";
+                document.getElementById('cardBackAns').innerText = `${item.word} ${item.phonetic}`;
+            }
+            
+            document.getElementById('cardIndex').innerText = `${currentCardIndex + 1} / ${currentFilteredVocab.length}`;
+        }
+
+        function flipCard() {
+            document.getElementById('card').classList.toggle('flipped');
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                currentCardIndex--;
+                renderCards();
+            }
+        }
+
+        function nextCard() {
+            if (currentCardIndex < currentFilteredVocab.length - 1) {
+                currentCardIndex++;
+                renderCards();
+            }
+        }
+
+        function randomCard() {
+            if (currentFilteredVocab.length > 0) {
+                currentCardIndex = Math.floor(Math.random() * currentFilteredVocab.length);
+                renderCards();
+            }
+        }
+
+        function renderTexts(unitFilter = 'all') {
+            const container = document.getElementById('textContainer');
+            container.innerHTML = '';
+
+            const filteredTexts = unitFilter === 'all' ? textData : textData.filter(t => t.unit === unitFilter);
+
+            filteredTexts.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'sentence-pair';
+                div.innerHTML = `
+                    <div class="en-text show-click">${item.en}</div>
+                    <div class="zh-text show-click">${item.zh}</div>
+                `;
+                container.appendChild(div);
+            });
+
+            document.querySelectorAll('.show-click').forEach(element => {
+                element.addEventListener('click', function() {
+                    this.classList.toggle('hide-active');
+                });
+            });
+        }
+
+        function toggleMask(type) {
+            const className = type === 'en' ? '.en-text' : '.zh-text';
+            document.querySelectorAll(className).forEach(el => {
+                el.classList.toggle('hide-active');
+            });
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
